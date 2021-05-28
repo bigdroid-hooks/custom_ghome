@@ -1,0 +1,19 @@
+myProps="
+ro.build.type user
+ro.build.flavor OnePlus7Pro-user
+ro.product.model GM1917
+ro.product.brand OnePlus
+ro.product.name OnePlus7Pro
+ro.product.device OnePlus7Pro
+ro.product.board msmnile
+ro.product.cpu.abi x86_64
+ro.product.cpu.abilist x86_64,x86,armeabi-v7a,armeabi
+ro.product.cpu.abilist32 x86,armeabi-v7a,armeabi
+ro.product.cpu.abilist64 x86_64
+ro.product.manufacturer oneplus
+ro.board.platform msmnile
+ro.build.product guacamole
+ro.build.description OnePlus7Pro 7.1.01R16NW G965FXXU1ARCC release-keys
+ro.build.fingerprint OnePlus/OnePlus7Pro/OnePlus7Pro:7/PKQ1.190110.001/1905120521:user/release-keys
+ro.build.characteristics phone, emulator"
+gearprop "$myProps"

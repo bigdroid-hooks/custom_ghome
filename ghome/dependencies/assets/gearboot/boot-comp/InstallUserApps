@@ -1,0 +1,21 @@
+#!/gearlock/bin/bash
+# Define vars
+slaveTTY="/dev/tty10"
+apps2installDir="$STATDIR/user-apps"
+me="$(readlink -f "$0")"
+
+if [ -e "$apps2installDir" ] && [ -n "$(ls -A "$apps2installDir" 2>/dev/null)" ]; then
+	
+	cd "$apps2installDir"
+	for apk in *; do chvt "${slaveTTY##*/tty}"; echo -e "\n  %%%%%   Installing   ----   ${apk%%.*}" > "$slaveTTY"; pm install -r "$apk"; done
+	echo -e "\n\n+++++ Press  \033[1;33mAlt + F7\033[0m  or  \033[1;33mfn + Alt + F7\033[0m  for returning to GUI" > "$slaveTTY"
+	write_gblog "All pending apps installed"
+	
+else
+	
+	write_gblog "No user-apps found to process"
+	
+fi
+
+rm -rf "$apps2installDir"
+rm "$me"

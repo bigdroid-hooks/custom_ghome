@@ -1,0 +1,4 @@
+myProps="
+ro.product.system.model GM1917
+ro.product.model GM1917"
+gearprop "$myProps"

@@ -1,0 +1,40 @@
+app_names=(
+"com.tencent.ig"
+"com.pubg.krmobile"
+"com.vng.pubgmobile"
+)
+
+phrase_name(){
+	case "$1" in
+		"${app_names[0]}") echo "PUBG GLOBAL" ;;
+		"${app_names[1]}") echo "PUBG KR" ;;
+		"${app_names[2]}") echo "PUBG VN" ;;
+	esac
+}
+
+if dialog --colors --clear --backtitle " $(gecpc "PUBGM CRASH FIX" "#") " --title " Confirm Action " \
+	--yes-label "Apply" --no-label "un-Apply" --yesno "\n What do you wanna do ?" 7 60; then
+	clear && i=0
+	for app in "${app_names[@]}"; do
+		if ls /data/app/*${app}* >/dev/null 2>&1; then
+			_dir="/data/media/0/Android/data/${app}/files/ProgramBinaryCache";
+			geco "#### Fixing crash for $(phrase_name "$app")"; ((i++))
+			
+			{
+			chattr -i "$_dir"; rm -r "$_dir"; mkdir -p "$_dir"; rmdir "$_dir"; touch "$_dir";
+			for _mdir in "/data/media/0/Android" "/data/media/0/Android/data" "/data/media/0/Android/data/${app}" "/data/media/0/Android/data/${app}/files" "$_dir"; do
+				chmod -f 775 "$_mdir"; chown media_rw:media_rw -h "$_mdir";
+			done
+			}>/dev/null 2>&1;
+		fi
+	done
+
+	test ! $i -gt 0 && echo "[!!!] No PUBG found in device"
+else
+	clear && geco "#### unApplying / exiting ..."
+	for app in "${app_names[@]}"; do
+		_dir="/data/media/0/Android/data/${app}/files/ProgramBinaryCache"
+		{ chattr -i "$_dir"; test -f "$_dir" && rm -f "$_dir"; }>/dev/null 2>&1
+	done
+	exit
+fi

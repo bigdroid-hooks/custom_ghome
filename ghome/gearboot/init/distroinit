@@ -1,0 +1,31 @@
+#!/gearlock/bin/bash
+# Log Boot
+timesHolder="$STATDIR/dmBootTimes";
+bootUpTimes="$(( "$(cat "$timesHolder" 2>/dev/null)" + 1 ))";
+ARM_NB_EXTN="$EXTDIR/[Exclusive] ARM Native-Bridge (aka Gaming-Protocols)";
+echo "$bootUpTimes" > "$timesHolder";
+echo -e "\n+ Welcome to DarkMatter and you're booting it up for \033[1;30m${bootUpTimes}\033[0m times!";
+test ! -e '/data/.distroinit' && chmod 777 "$DEPDIR/distroinit" && gsudo gearlock-cli "$DEPDIR/distroinit";
+
+# Check system change
+if test -e "$ARM_NB_EXTN"; then
+	gxpmLog="$STATDIR/gxpm.log";
+	touch "$gxpmLog";
+	gxpmLogSum="$(md5sum "$gxpmLog" 2>/dev/null | cut -d' ' -f1)";
+	gxpmLogSumHolder="$STATDIR/darkmatter.gxpm.log.md5";
+	if test -e "$gxpmLog" && test -e "$gxpmLogSumHolder"; then
+		if test "$gxpmLogSum" != "$(cat "$gxpmLogSumHolder")"; then
+			echo "$gxpmLogSum" > "$gxpmLogSumHolder";
+			case "$(cat "$STATDIR/native-bridge")" in
+				"Alpha") "$ARM_NB_EXTN" 1 ;;
+				"Delta") "$ARM_NB_EXTN" 2 ;;
+				"Gamma") "$ARM_NB_EXTN" 3 ;;
+				"Lynx") "$ARM_NB_EXTN" 4 ;;
+				"Omega") "$ARM_NB_EXTN" 5 ;;
+				"Xen") "$ARM_NB_EXTN" 6 ;;
+			esac
+		fi
+	else
+		test -e "$gxpmLog" && echo "$gxpmLogSum" > "$gxpmLogSumHolder"
+	fi
+fi

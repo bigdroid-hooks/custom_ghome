@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="wifiinfo">[{&quot;a_dc&quot;:0,&quot;bssid&quot;:&quot;18:d6:c7:eb:65:fe&quot;,&quot;ssid&quot;:&quot;\&quot;TP-LINK_65FE\&quot;&quot;,&quot;a_fcy&quot;:2437,&quot;a_hssid&quot;:0,&quot;a_ip&quot;:1778428096,&quot;a_ls&quot;:150,&quot;a_mac&quot;:&quot;08:9e:01:a3:7f:ba&quot;,&quot;a_nid&quot;:0,&quot;rssi&quot;:-68,&quot;sta&quot;:3,&quot;ts&quot;:1604161332767}]</string>
+</map>

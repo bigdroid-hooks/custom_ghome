@@ -1,0 +1,30 @@
+job(){
+	
+	test "$1" == "enable" && {
+    echo -e "
+! grep -q 'hud.rc' /android/init.rc && {
+
+	echo -e '
+on init
+    export GALLIUM_HUD_VISIBLE false
+    export GALLIUM_HUD_TOGGLE_SIGNAL 10
+    export GALLIUM_HUD GPU-load+cpu+fps
+' > \"\$GTMP/hud.rc\"
+
+	sed -i \"1 i\import $GTMP/hud.rc\" /android/init.rc
+}
+" > "$GBDIR/init/GalliumHud";
+    echo -e "test ! -e \"\$GTMP/hud.activated\" && kill -10 \$(ps -fA | grep -v grep | grep surfaceflinger | awk '{print \$2}') && write_gblog \"GallumHud Activated\" && touch \"\$GTMP/hud.activated\"" > "$GBDIR/boot-comp/GalliumHudTrigger";:;
+
+} || rm -f "$GBDIR/init/GalliumHud" "$GBDIR/boot-comp/GalliumHudTrigger"
+
+	msgbox " $(gecpc " GalliumHud " "#") " " Info " "\n Successfully ${1}d, restart to see changes." 7 60
+	
+}
+	if dialog --colors --clear --backtitle " $(gecpc " GalliumHud " "#") " \
+	--title " Select Action " --yes-label " Enable " --no-label " Disable " --defaultno  --yesno \
+	"\n ${MBOLD}${MU}${MGREEN}Current Status:${MRC} ${MBOLD}${MYELLOW}$(test -e "$GBDIR/init/GalliumHud" && echo 'Enabled' || echo 'Disabled')${MRC}\n\n This shows an overlay on your screen directly from Mes3D with advanced GPU\n stats such as GPU/CPU temp, FPS, performance diagram etc.\n\n ${MBOLD}${MU}${MRED}Note:${MRC} It only works with AMD, Nividia and some Intel GPU's.\n So don't yell it at if it didn't work for you! \n It may also impact on performance." 15 80; then
+		job "enable"
+	else
+		job "disable"
+	fi

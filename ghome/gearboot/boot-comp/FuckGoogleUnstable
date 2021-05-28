@@ -1,0 +1,6 @@
+if [ -e "/system/etc/sysconfig/google.xml" ]; then
+	sleep 60
+	pm disable com.google.android.gms/com.google.android.gms.auth.managed.admin.DeviceAdminReceiver
+	pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver
+	ps -fA | grep -v grep | grep -q 'com.google.android.gms.unstable' && { write_gblog "Yes, that's right, it is now that you know .....  he (Google) fucked up!"; cpulimit -e com.google.android.gms.unstable -l 5 >/dev/null 2>&1; }
+fi

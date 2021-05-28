@@ -1,0 +1,11 @@
+job(){
+	
+	test "$1" == "enable" && rsync -a "$DEPDIR/native-bridge/gbscripts/gbscript_3" "$GBDIR/boot-post/UltraFPSUnlocker" || rm -f "$GBDIR/boot-post/UltraFPSUnlocker"
+	msgbox " $(gecpc " UtraFPS Unlocker " "#") " " Info " "\n Successfully ${1}d, restart to see changes." 7 60
+	
+}
+	if dialog --colors --clear --backtitle " $(gecpc " UtraFPS Unlocker " "#") " --title " Select Action " --yes-label " Enable " --no-label " Disable " --defaultno  --yesno "\n ${MBOLD}${MU}${MGREEN}Current Status:${MRC} ${MBOLD}${MYELLOW}$(test -e "$GBDIR/boot-post/UltraFPSUnlocker" && echo 'Enabled' || echo 'Disabled')${MRC}\n\n This can activate max FPS option in most of the BattleRoyale Games\n in most of the computers.\n\n ${MBOLD}${MU}${MRED}Note:${MRC} This can cause some apps & games or even system components to\n crash / behave abnormally, use at your own risk!" 15 80; then
+		job "enable"
+	else
+		job "disable"
+	fi

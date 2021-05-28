@@ -1,0 +1,11 @@
+#!/gearlock/bin/bash
+if [ -e "/system/etc/default-permissions/microg-permissions.xml" ]; then
+	sleep 10
+	settings put secure allow_fake_signature_global 1
+	write_gblog "Signature Spoof Enabled"
+else
+	write_gblog "Signature Spoof Not Required"
+fi
+rm "$0"
+
+

@@ -1,0 +1,193 @@
+#!/gearlock/bin/bash
+#####	Omega = Gamma = Xen (All use $COMMON_LIB64)
+#####	Lynx = Xen (With $COMMON_ASSET[A])
+#####	
+
+
+# Define vars
+EXTERNAL_INPUT="$1"
+PROTOCOL_BASEDIR="$DEPDIR/native-bridge"
+PROTOCOL_STATFILE="$STATDIR/native-bridge"
+OBJECT_DIR="$PROTOCOL_BASEDIR/objects"
+
+# Define common aseets
+COMMON_ASSET[1]="$PROTOCOL_BASEDIR/common/asset_1.gxp" # AllProtocol libc.so libnb.so
+COMMON_ASSET[2]="$PROTOCOL_BASEDIR/common/asset_2.gxp" # XenProtocol libc.so libnb.so
+COMMON_ASSET[3]="$PROTOCOL_BASEDIR/common/asset_3.gxp" # Omega = Gamma = Xen (Common lib64) (common arm/widevine) (Common lib64/libnb.so && libhoudini.so)
+
+# Define protocol objects
+NB_OBJECT[1]="$OBJECT_DIR/1.obj"
+NB_OBJECT[2]="$OBJECT_DIR/2.obj"
+NB_OBJECT[3]="$OBJECT_DIR/3.obj"
+NB_OBJECT[4]="$OBJECT_DIR/4.obj"
+NB_OBJECT[5]="$OBJECT_DIR/5.obj"
+NB_OBJECT[6]="$OBJECT_DIR/6.obj"
+
+# Define gearboot scripts
+GB_SCRIPT[1]="$PROTOCOL_BASEDIR/gbscripts/gbscript_1" # OnePlus Props
+GB_SCRIPT[2]="$PROTOCOL_BASEDIR/gbscripts/gbscript_2" # SamSung Props
+
+INFO_MSG="
+
+\n ${MBOLD}${MU}${MGREEN}Currently active protocol:${MRC} ${MBOLD}${MRED}$(cat "$STATDIR/native-bridge" 2>/dev/null)${MRC}
+\n
+\n This are basically ARM native-bridge libs for android nougat and literally nothing more.
+\n ARM native-bridge is used on android_x86 for translating ARM(mobile-processor) based games/apps over x86 PC processors.
+\n I've just named these different variants of ARMv7 & ARMv8 nativebridge-libs to make it easier to remember.
+\n
+\n Lynx protocol is used by default unless you change it (This is bacially a Lightweight version of Xen).
+\n Although, the Alpha/Delta/Gamma/Omega protocol might work better in some cases while fixing some game glitches.
+\n
+\n Xen protocol will get rid of all sorts of COD-MOBILE & PUBG-LITE issues, but in this protocol PUBG will not work.
+\n ${MBOLD}${MU}${MYELLOW}Protip:${MRC} You can switch protocols as many times you want! [Experiment yourself to find the best one for your hardware]
+\n
+\n ${MBOLD}${MU}${MGREEN}Disclaimer:${MRC} This Gaming-Protocols is an extension supplied with PhoenixOS DarkMatter builds and is not a part of GearLock in any means.
+\n We(DarkMatter-Team) hold no responsibility to any kind of casualties caused by these native-bridge versions over any games and such, use at your own risk.
+\n
+
+"
+
+
+# Define functions
+
+do_sync(){ 
+	for mp in "/system" "/"; do
+		cd /; mount -o rw,remount,atime,diratime,relatime "$mp"
+		if [ -z "$RECOVERY" ]; then echo 'rm -rf /data/dalvik-cache/*; rm $0' > "$GBDIR/init/ClearDalvikCache"; else rm -rf /data/dalvik-cache/*; fi
+		sync; sync "$mp" "$GRROOT/"*; mount -o rw,noatime "$mp"
+	done
+}
+
+working_prompt(){
+
+	if test -z "$EXTERNAL_INPUT"; then
+		dialog --colors --infobox "\n   $1 ..." 5 70
+	else
+		echo -e "$(echo "$1" | sed -e 's|\\Zb||g' -e 's|\\Z1||g' -e 's|\\Zn||g') ..."
+	fi
+
+}
+
+verify_progs(){
+
+	GARC_PATH="$GRLBASE/bin/garca"; test "$(md5sum "$GARC_PATH" | awk '{print $1}')" != "cdb204faf93ea811d023f31f52d7052e" && exit 1
+	for prog in garca chmod; do type $prog 2>/dev/null | grep -iq function && exit 1; done
+	! garca t 2>&1 | grep -q "Command Line Error:" && exit 1
+	garca t >/dev/null 2>&1; test "$?" != "7" && exit 1
+
+}
+
+install_gp(){
+
+	working_prompt "Setting Gaming-Protocol to ${MBOLD}${MRED}${choiceName}${MRC}" && verify_progs
+	( rm -rf /system/lib*/arm* /system/lib*/libhoudini.so /system/lib*/libnb.so
+	garca x -aoa -p'017277axzpqr' -o'/system' "$1" )>/dev/null 2>&1
+	echo "${choiceName}" > "$PROTOCOL_STATFILE"
+	if test "${choiceName}" == "Xen"; then install_gbscript "${GB_SCRIPT[2]}"; else rm -f "$GBDIR/post-fs-data/DarkMatter_GamingProtocol_Handler"; fi
+
+}
+
+install_common_asset(){
+
+	for f in "$@"; do
+		garca x -aoa -p'017277axzpqr' -o'/system' "$f">/dev/null 2>&1
+	done
+
+}
+
+install_gbscript(){
+
+	ln -srf "$1" "$GBDIR/post-fs-data/DarkMatter_GamingProtocol_Handler"
+
+}
+
+manage_pubg(){
+
+	if [ "$1" == "disable" ]; then
+		handle_pubg(){
+		
+			for appid in "com.tencent.ig" "com.pubg.krmobile" "com.vng.pubgmobile"; do pm disable "$appid" >/dev/null 2>&1; done
+		}
+	else
+		handle_pubg(){
+		
+			for appid in "com.tencent.ig" "com.pubg.krmobile" "com.vng.pubgmobile"; do pm enable "$appid" >/dev/null 2>&1; done
+		}
+	fi
+    
+	local mygbdir="$GBDIR/boot-comp"
+	local paths="/system/lib*/libhoudini.so /system/lib*/libnb.so /system/lib*/arm* /system/lib*/libc.so /system/lib*/libc++.so /system/lib*/libm.so /system/lib*/libdl.so"
+	find ${paths[*]} -type d -exec chmod 755 {} \;; find ${paths[*]} -type f -exec chmod 644 {} \;
+	chmod 755 /system/lib* /system/lib*/arm*/houdini* /system/*bin/houdini* >/dev/null 2>&1
+	
+	if test "$BOOTCOMP" == "yes"; then
+		handle_pubg
+	else
+		type handle_pubg | tail +2 > "$mygbdir/$FUNCNAME"; echo -e "\nhandle_pubg; rm \$0" >> "$mygbdir/$FUNCNAME"
+	fi
+
+}
+
+manage_czfm(){
+
+	install_czfm(){
+	
+		mkdir -p /system/app/PosLFM && chmod 755 /system/app/PosLFM && mv "$STATDIR/czfm_cache.apk" /system/app/PosLFM
+	
+	}
+	
+	local appid="com.chaozhuo.filemanager.phoenixos"
+	local mygbdir="$GBDIR/boot-comp"
+	local czFMlock="$STATDIR/restore.czfm.lock"
+	test -e "/system/app/PosLFM" && touch "$czFMlock"
+	if test "$1" == uninstall && test -e /system/app/PosLFM; then
+		test ! -e "$STATDIR/czfm_cache.apk" && rsync -a /system/app/PosLFM/PosLFM.apk "$STATDIR/czfm_cache.apk"
+# 		if test "$BOOTCOMP" == "yes"; then
+# 			pm uninstall "$appid" >/dev/null 2>&1
+# 		else
+			rm -rf /system/app/PosLFM
+# 		fi
+	elif test -e "$czFMlock" && test ! -e "/system/app/PosLFM"; then
+# 		if test -z "$RECOVERY"; then
+			install_czfm>/dev/null 2>&1
+# 		else
+# 			type install_czfm | tail +2 > "$mygbdir/$FUNCNAME"; echo -e "\ninstall_czfm; rm \$0" >> "$mygbdir/$FUNCNAME"
+# 		fi
+	fi
+
+}
+
+
+cmd=(dialog --colors --backtitle "$(gecpc "DarkMatter Gamimg Protocols" "#")" --title " Select Gaming Protocol " --ok-label " Select " --cancel-label Exit --menu "${INFO_MSG}" 28 160 10)
+
+options=(
+
+1 "Alpha        |       For all games except PUBG-LITE & CODM"
+2 "Delta        |       For all games expect PUBG-MOBILE, PUBG-LITE & CODM"
+3 "Gamma        |       For all games except PUBG-LITE & CODM"
+4 "Lynx         |       For all games except PUBG-LITE & CODM"
+5 "Omega        |       For all games expect PUBG-MOBILE, PUBG-LITE & CODM"
+6 "Xen          |       For all games expect PUBG-MOBILE"
+
+)
+
+if test -z "$EXTERNAL_INPUT"; then
+	choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty); test $? == 1 && exit 1
+else
+	choices="$EXTERNAL_INPUT"
+fi
+
+choiceName="$(echo "${options[$(( (choices * 2) - 1 ))]}" | cut -d' ' -f1)"
+
+for choice in $choices; do
+	case $choice in
+		1) install_gp "${NB_OBJECT[$choice]}"; install_common_asset "${COMMON_ASSET[1]}"; manage_czfm; manage_pubg enable ;;
+		2) install_gp "${NB_OBJECT[$choice]}"; install_common_asset "${COMMON_ASSET[1]}"; manage_czfm disable; manage_pubg disable ;;
+		3) install_gp "${NB_OBJECT[$choice]}"; install_common_asset "${COMMON_ASSET[1]}" "${COMMON_ASSET[3]}"; manage_czfm uninstall; manage_pubg enable ;;
+		4) install_gp "${NB_OBJECT[$choice]}"; install_common_asset "${COMMON_ASSET[1]}" "${COMMON_ASSET[3]}"; manage_czfm; manage_pubg enable ;;
+		5) install_gp "${NB_OBJECT[$choice]}"; install_common_asset "${COMMON_ASSET[1]}" "${COMMON_ASSET[3]}"; manage_czfm uninstall; manage_pubg disable ;;
+		6) install_gp "${NB_OBJECT[$choice]}"; install_common_asset "${COMMON_ASSET[2]}" "${COMMON_ASSET[3]}"; manage_czfm uninstall; manage_pubg disable ;;
+	esac
+done 
+
+do_sync>/dev/null 2>&1; if [ -z "$EXTERNAL_INPUT" ] && [ -z "$RECOVERY" ]; then working_prompt "Rebooting ..." && sleep 5 && greboot>/dev/null 2>&1; fi

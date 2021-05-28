@@ -1,0 +1,236 @@
+#!/gearlock/bin/bash
+
+# Kill /anim if exists
+kill -9 "$(ps -fA | grep -v grep | grep 'anim' | awk '{print $2}')"
+
+# Define variables and arrays
+ASSET_CACHE="$DEPDIR/.distroinit_asset_cache"
+DM_ASSET="$DEPDIR/distroinit_assets.gxp"
+DM_INIT_HOLDER="/data/.distroinit"
+PREINSTALL_APPDIR="$STATDIR/user-apps"
+SU_HANDLER_DIR="/system/priv-app/SuperUser"
+OMNI_SWITCH_DIR="/system/priv-app/OmniSwitch"
+ARM_NB_EXTN="$EXTDIR/[Exclusive] ARM Native-Bridge (aka Gaming-Protocols)"
+test -e "$DM_INIT_HOLDER" && echo -e "\n++++ Your distro is already initialized" && exit 1
+
+MENU_OPT=(
+	GOOGLE_APPS
+	MICRO_G
+	GAMIMG_PROTOCOLS
+	AURORA_STORE
+	FIREFOX
+	VIPER_AUDIO_FX
+	TASK_MANAGER
+	OPEN_CAMERA
+	OMNI_CLOCK
+	FOCUS
+	KEYMAPPER_CONFIG
+	SUPERUSER_HANDLER
+	OMNI_SWITCH
+)
+
+MENU_HEADER_INFO="
+\n Use arrow-keys to navigate. ${MBOLD}${MRED}Press ${MBOLD}${MBLACK}<space>${MRED} over an option to enable/disable it${MRC}
+\n Here you can select which of the features and apps you want to have in your ${MBOLD}DarkMatter${MRC} Installation.
+\n You can not have ${MBOLD}${MBLUE}${MENU_OPT[0]}${MRC} & ${MBOLD}${MGREEN}${MENU_OPT[1]}${MRC} at the same time as they will conflict between your system.
+\n ${MBOLD}${MRED}Note:${MRC} You can configure this only once unless you clear your data and ${MBOLD}${MYELLOW}[*]${MRC} means enabled.
+\n ${MBOLD}${MRED}Note:${MRC} All the default options are pre-selected, you can press <Enter> as is if you like. \n \n
+"
+
+MENU_OPT_INFO=(
+	"This installs Play-Store & Google-Services"
+	"A superfast and lightweight anternative to ${MBOLD}${MBLUE}${MENU_OPT[0]}${MRC}"
+	"This is our exclusive Gaming Protocols to enhance your gaming expecience for unsupported Games"
+	"This is a cool Play-Store client, you should use it with ${MBOLD}${MGREEN}${MENU_OPT[1]}${MRC}"
+	"This is the default browser we suggest to use with DarkMatter"
+	"This is a audio modification library to tweak your audio output behavior"
+	"This is a simple task manager application, useful for viewing and closing background apps"
+	"This is a simple camera application which allows you to capture images and do stuff"
+	"This is the OMNI CLOCK application as a replacement for the native android clock app"
+	"This is a photo gallery and photo viewer application, it can help you set wallpapers too"
+	"This will pre-install GameHelper-Keymapper configuration to avoid re-downloading them from slow CZ servers"
+	"This give you the ability to control which app should/shouldn't have root access."
+	"This is the omni Switch, ever heard of it, eh ? Could be useful with touchscreen devices"
+)
+
+OPEN_GAPPS_LIST=(
+	"/system/priv-app/ConfigUpdater"
+	"/system/priv-app/GoogleBackupTransport"
+	"/system/priv-app/GoogleContactsSyncAdapter"
+	"/system/priv-app/GoogleFeedback"
+	"/system/priv-app/GoogleLoginService"
+	"/system/priv-app/GoogleOneTimeInitializer"
+	"/system/priv-app/GooglePartnerSetup"
+	"/system/priv-app/GoogleServicesFramework"
+	"/system/priv-app/Phonesky"
+	"/system/priv-app/PrebuiltGmsCore"
+)
+
+MICRO_GAPPS_LIST=(
+	"/system/app/AuroraStore"
+	"/system/app/FDroid"
+	"/system/priv-app/AuroraServices"
+	"/system/priv-app/FDroidPrivileged"
+	"/system/priv-app/FakeStore"
+	"/system/priv-app/GmsCore"
+	"/system/priv-app/GsfProxy"
+)
+
+
+EXTRA_FILES_LIST=(
+	"/system/lib/libjni_keyboarddecoder.so"
+	"/system/lib/libjni_latinimegoogle.so"
+	"/system/lib64/libjni_keyboarddecoder.so"
+	"/system/lib64/libjni_latinimegoogle.so"
+	"/system/etc/default-permissions"
+	"/system/etc/sysconfig"
+	"/system/etc/org.fdroid.fdroid"
+	"/system/etc/permissions/com.google.android.maps.xml"
+	"/system/etc/permissions/com.google.android.media.effects.xml"
+	"/system/etc/permissions/features.xml"
+	"/system/lib64/libjni_keyboarddecoder.so"
+	"/system/lib64/libjni_latinimegoogle.so"
+	"/system/lib/libjni_keyboarddecoder.so"
+	"/system/lib/libjni_latinimegoogle.so"
+)
+
+# Define functions
+function checklist(){
+
+	BACK_TITLE="$1" TITLE="$2" NUM_OPTIONS="$3" HEADER_TEXT="$4"; shift;shift;shift;shift
+	
+	CHOSEN_LIST=$(dialog --clear --colors --ok-label "  Confirm  " --nocancel --backtitle "$BACK_TITLE" --title "$TITLE" --separate-output --checklist "$HEADER_TEXT" 26 150 "$NUM_OPTIONS" "$@"  3>&1 1>&2 2>&3)
+	ORIG_IFS="$IFS"; IFS=$'\n'; CHOSEN_LIST=( $CHOSEN_LIST ); IFS="$ORIG_IFS"
+	
+	CHOSEN=""
+	for i in "${CHOSEN_LIST[@]}"; do
+		CHOSEN+="\"$i\" "
+	done
+	
+	echo "$CHOSEN"
+
+}
+
+function ask_opts (){
+
+# Get input
+ANSWER=$( checklist "DarkMatter Initialization Wizard (Press <Enter> to Confirm)" " Configure options and features " 13 "${MENU_HEADER_INFO}" \
+		\
+		"${MENU_OPT[0]}" "${MENU_OPT_INFO[0]}" ON \
+		"${MENU_OPT[1]}" "${MENU_OPT_INFO[1]}" OFF \
+		"${MENU_OPT[2]}" "${MENU_OPT_INFO[2]}" ON \
+		"${MENU_OPT[3]}" "${MENU_OPT_INFO[3]}" ON \
+		"${MENU_OPT[4]}" "${MENU_OPT_INFO[4]}" ON \
+		"${MENU_OPT[5]}" "${MENU_OPT_INFO[5]}" OFF \
+		"${MENU_OPT[6]}" "${MENU_OPT_INFO[6]}" ON \
+		"${MENU_OPT[7]}" "${MENU_OPT_INFO[7]}" OFF \
+		"${MENU_OPT[8]}" "${MENU_OPT_INFO[8]}" OFF \
+		"${MENU_OPT[9]}" "${MENU_OPT_INFO[9]}" OFF \
+		"${MENU_OPT[10]}" "${MENU_OPT_INFO[10]}" ON \
+		"${MENU_OPT[11]}" "${MENU_OPT_INFO[11]}" OFF \
+		"${MENU_OPT[12]}" "${MENU_OPT_INFO[12]}" OFF )
+		
+# Convert $ANSWER into plain string
+ANSWER=( $(eval echo $ANSWER) )
+
+}
+
+function setup_opts (){
+	if [ -n "${ANSWER[*]}" ]; then
+		clear && echo -e "\n+++ Loading assets ..."
+		garca x -p'017277axzpqr' -o"$ASSET_CACHE" "$DM_ASSET" 1>/dev/null || exit
+		find "$ASSET_CACHE" -type d -exec chmod 755 {} \;; find "$ASSET_CACHE" -type f -exec chmod 644 {} \;;
+
+		# Cleanup first
+# 		for i in {3..10}; do rm -rf "/system/darkmatter/app/${MENU_OPT[$i]}"; done
+		rm -rf ${OPEN_GAPPS_LIST[*]}; rm -rf ${MICRO_GAPPS_LIST[*]}; rm -rf ${EXTRA_FILES_LIST[*]}; rm -f "$ARM_NB_EXTN"
+		rm -rf "$PREINSTALL_APPDIR" "$SU_HANDLER_DIR" "$OMNI_SWITCH_DIR";
+
+		for opt in "${ANSWER[@]}"; do
+			echo -e "\n++++ Setting up $opt ..." && sleep 0.3
+			case "$opt" in
+				"${MENU_OPT[0]}") rsync -a "$ASSET_CACHE/open_gapps/" "/system" ;;
+				
+				"${MENU_OPT[1]}") test -n "$GOOGLE_PROPRIETARY" && rsync -a "$ASSET_CACHE/micro_gapps/google/" "$ASSET_CACHE/micro_gapps"
+				rm -rf "$ASSET_CACHE/micro_gapps/google"; rsync -a "$ASSET_CACHE/micro_gapps/" "/system" ;;
+				
+				"${MENU_OPT[2]}") rsync -a "$ASSET_CACHE/extensions/" "$EXTDIR"; echo -n "=== " && chmod 755 "$ARM_NB_EXTN" && "$ARM_NB_EXTN" 4 ;;
+				
+				"${MENU_OPT[3]}"|"${MENU_OPT[4]}"|"${MENU_OPT[5]}"|"${MENU_OPT[6]}"|"${MENU_OPT[7]}"|"${MENU_OPT[8]}"|"${MENU_OPT[9]}")
+				mkdir -p "$PREINSTALL_APPDIR"; rsync -a "$ASSET_CACHE/user-apps/${opt}.apk" "$PREINSTALL_APPDIR" ;;
+				
+				"${MENU_OPT[10]}") rsync -a "$ASSET_CACHE/keymapper_config" "$STATDIR" ;;
+				
+				"${MENU_OPT[11]}") mkdir -p "$SU_HANDLER_DIR"; rsync -a "$ASSET_CACHE/user-apps/SUPERUSER.apk" "$SU_HANDLER_DIR/SuperUser.apk" ;;
+				
+				"${MENU_OPT[12]}") mkdir -p "$OMNI_SWITCH_DIR"; rsync -a "$ASSET_CACHE/user-apps/OMNI_SWITCH.apk" "$OMNI_SWITCH_DIR/OmniSwitch.apk" ;;
+			esac
+		done
+	fi
+	
+	# Setup essential user apps
+	echo -e "\n++++ Setting up Essential-User-Apps ..."
+	rsync -a "$ASSET_CACHE/essential-user-apps/" "$PREINSTALL_APPDIR"
+	
+	# Install independent gearboot scripts 
+	rsync -a "$ASSET_CACHE/gearboot/" "$GBDIR" && chmod -R 755 "$GBDIR"
+	
+	# Process additional things
+	touch "$DM_INIT_HOLDER"
+	rm -rf "$ASSET_CACHE"
+	{ rmmod atkbd; rmmod hid-apple; } > /dev/null 2>&1
+}
+
+
+### Main
+
+if test ! -e "${DISTRO_INIT_CONFIG:="$GRROOT/distroinit.config"}"; then
+	# Make sure keyboard drivers are loaded
+	modprobe -a atkbd hid-apple
+	# Collect input
+	ask_opts
+else
+	ANSWER=($(grep -v '#' "$DISTRO_INIT_CONFIG"))
+	CONFIG=true
+fi
+
+
+# Verify and handle the opts
+while true; do
+	
+	if test -z "${ANSWER[*]}"; then
+			
+		if yesno "Lack of input" " ${_attention_} " " You seem to have disabled all options, do you want to continue ? " 10 70; then
+			msgbox "Hmm ..." " Info " "${_as_you_wish_}" 5 40 && break
+		else
+			ask_opts
+		fi
+			
+	elif echo "${ANSWER[*]}" | grep "${MENU_OPT[0]}" | grep -q "${MENU_OPT[1]}"; then
+			
+		msgbox "Warning" " ${_attention_} " "You can not have ${MBOLD}${MBLUE}${MENU_OPT[0]}${MRC} & ${MBOLD}${MGREEN}${MENU_OPT[1]}${MRC} at the same time!\n \nPlease select again ..."
+		ask_opts
+			
+	elif echo "${ANSWER[*]}" | grep -q "${MENU_OPT[1]}" && test -z "$CONFIG"; then
+	
+		if yesno " Additional feature " " ${_attention_}" "Do you want to have some proprietary Google software such as PlayStore, ContactsSync & latinimei keyboard extras included with MICRO_G ?" 8 80; then
+		
+			GOOGLE_PROPRIETARY="true"
+			msgbox " Very important information " " ${_warning_} " \
+			"In order to make GoogleApps working fine with microG ${MBOLD}${MYELLOW}Signature-Spoofing${MRC} from ${MBOLD}Settings > DeveloperOptions${MRC} is enabled by default, but it lowers your security for the sake of using microG to avoid using bloaty GoogleServices. Be sure not to use any third-party security threatning apps like ${MBOLD}${MYELLOW}LuckyPatcher${MRC} and so on." 10 125
+		
+		fi
+		
+		break
+	
+	else
+	
+		break
+	
+	fi
+	
+done
+
+# Perform operatiosn as required
+/anim &
+setup_opts

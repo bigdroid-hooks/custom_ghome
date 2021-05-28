@@ -1,0 +1,8 @@
+config2Install="$STATDIR/keymapper_config"
+test ! -e "$config2Install" && { rm "$0"; exit 1; }
+localKeyMapperData="/data/data/com.chaozhuo.gamemaster"
+uid="$(grep 'com.chaozhuo.gamemaster' /data/system/packages.list | awk '{print $2}')"
+rsync -a "$config2Install/" "$localKeyMapperData"
+cd "$localKeyMapperData" && chown -hR ${uid}:${uid} app_textures app_webview cache code_cache files shared_prefs
+rm -r "$config2Install" "$0"
+write_gblog "KeyMapper Config Installed"
