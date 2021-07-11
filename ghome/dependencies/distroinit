@@ -1,7 +1,7 @@
 #!/gearlock/bin/bash
 
 # Kill /anim if exists
-kill -9 "$(ps -fA | grep -v grep | grep 'anim' | awk '{print $2}')"
+pkill -9 anim
 
 # Define variables and arrays
 ASSET_CACHE="$DEPDIR/.distroinit_asset_cache"
