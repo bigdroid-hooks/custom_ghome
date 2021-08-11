@@ -2,7 +2,7 @@ NAME="AddCustomGhome"
 
 CODENAME="custom_ghome"
 
-AUTHOR="AXON"
+AUTHORS=("AXON")
 
 VERSION="1.0"
 
@@ -14,20 +14,17 @@ TAGS=()
 
 SECTION=()
 
-INSTALLED_SIZE=""
+INSTALLED_SIZE="" # in KiB
 
 ORIGIN=""
 
-BUGS=""
+BUGREPORT="" # link
 
-HOMEPAGE=""
+HOMEPAGE="" # link
 
 ARCH=()
 
-DEPENDS=(
-	"wipe_ghome"
-	"overlord_screen"
-)
+DEPENDENCIES=()
 
 REPLACES=()
 
@@ -39,6 +36,6 @@ RECOMMENDS=()
 
 SUGGESTS=()
 
-ESSENTIAL=""
+ESSENTIAL="" # boolean
 
-INTERACTIVE="no, no"
+INTERACTIVE="false" # boolean
