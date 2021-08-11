@@ -46,7 +46,7 @@
 #   %% Simply take a look at 'https://github.com/bigdroid/bigdroid/blob/main/src/libgearlock.sh' to know
 #   %% which gearlock variables and functions are available for use.
 
-
+wipedir "$GHOME"
 gclone --chown=root:root "$HOOK_DIR/ghome" "$GHOME";
 
 # Handle enc
