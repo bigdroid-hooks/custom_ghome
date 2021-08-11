@@ -64,7 +64,7 @@ readarray -d '' encrypted_files < <(find "$GHOME" -name "*.enc" -print0) || true
 
 # Package assets
 cd "$GHOME/dependencies/assets"
-garca a -mx=${1:-"10"} -m0=zstd -mhe=on -p'017277axzpqr' ../distroinit_assets.gxp *
+garca a -mx=${1:-"10"} -m0=zstd ../distroinit_assets.gxp *
 rm -r "$GHOME/dependencies/assets"
 chmod -R 755 "$GHOME"
 # cd "$HOOK_DIR"
