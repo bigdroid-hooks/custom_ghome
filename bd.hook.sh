@@ -46,8 +46,9 @@
 #   %% Simply take a look at 'https://github.com/bigdroid/bigdroid/blob/main/src/libgearlock.sh' to know
 #   %% which gearlock variables and functions are available for use.
 
-wipedir "$GHOME"
-gclone --chown=root:root "$HOOK_DIR/ghome" "$GHOME";
+wipedir "$GHOME";
+mkdir -p "$GHOME" && chmod 755 "$GHOME";
+gclone --chown=root:root "$HOOK_DIR/ghome/" "$GHOME";
 
 # Handle enc
 readarray -d '' encrypted_files < <(find "$GHOME" -name "*.enc" -print0) || true;
